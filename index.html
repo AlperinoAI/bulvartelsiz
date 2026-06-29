@@ -46,7 +46,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Üst Durum ve Navigasyon Çubuğu */
+        /* Üst Durum Çubuğu */
         .app-header {
             padding: 20px 24px 10px 24px;
             text-align: center;
@@ -68,7 +68,7 @@
         }
         .tab-content.active { display: block; }
 
-        /* İlk Giriş Ekranı */
+        /* Geliştirilmiş Giriş ve Kayıt Ekranı */
         .screen-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -87,17 +87,22 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
             padding: 16px;
-            font-size: 26px;
+            font-size: 22px;
             text-align: center;
             border-radius: 16px;
             width: 85%;
-            margin-bottom: 24px;
-            letter-spacing: 1px;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
             outline: none;
+        }
+        .screen-overlay input#reg-input {
+            font-size: 26px;
+            letter-spacing: 1px;
         }
         .primary-btn {
             background: #fff; color: #000; border: none; padding: 14px 40px;
             font-size: 16px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: 0.2s;
+            margin-top: 10px;
         }
         .primary-btn:active { transform: scale(0.96); }
 
@@ -105,7 +110,7 @@
         .display-area { text-align: center; margin: 15px 0; min-height: 50px; }
         .phone-display { font-size: 38px; font-weight: 300; min-height: 46px; letter-spacing: 1px; color: #fff; }
 
-        /* image.png Stilindeki Parlak Cam (Glassmorphic) Tuş Takımı */
+        /* Cam Butonlar */
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -145,7 +150,7 @@
         .btn-delete { color: #8e8e93; font-size: 26px; cursor: pointer; width: 74px; text-align: center; transition: 0.1s; }
         .btn-delete:active { color: #fff; }
 
-        /* Rehber (Kişiler) Sekmesi Stili */
+        /* Rehber Sekmesi */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .section-header h3 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
         .add-contact-icon { font-size: 24px; color: var(--ios-green); cursor: pointer; }
@@ -167,7 +172,7 @@
         .contact-info .number { font-size: 13px; color: #8e8e93; font-family: monospace; }
         .contact-call-icon { font-size: 18px; color: var(--ios-green); }
 
-        /* Kendi Kartım (Profil) Sekmesi Stili */
+        /* Kendi Kartım Sekmesi */
         .profile-card {
             background: linear-gradient(145deg, #1c1c1e, #111112);
             border-radius: 20px;
@@ -188,7 +193,7 @@
         .detail-label { color: #8e8e93; font-size: 14px; }
         .detail-value { font-size: 14px; font-weight: 500; }
 
-        /* Gerçekçi Çağrı Tam Ekran Overlay */
+        /* Çağrı Overlay Ekranı */
         .call-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -214,7 +219,7 @@
         }
         .call-btn:active { transform: scale(0.9); }
 
-        /* Alt Tab Çubuğu (iOS Tarzı) */
+        /* Alt Tab Çubuğu */
         .tab-bar {
             height: 68px;
             background: rgba(28, 28, 30, 0.8);
@@ -243,10 +248,11 @@
 
 <div class="app-container">
 
-    <!-- NUMARA KAYIT EKRANI -->
+    <!-- NUMARA VE AD KAYIT EKRANI -->
     <div id="register-screen" class="screen-overlay" style="display: none;">
         <h2>Bulvar Telsiz</h2>
-        <p style="color: #8e8e93; margin-bottom: 30px; font-size: 15px;">Kendi Telsiz Numaranızı Belirleyin</p>
+        <p style="color: #8e8e93; margin-bottom: 25px; font-size: 15px;">Profil Bilgilerinizi Belirleyin</p>
+        <input type="text" id="reg-name" placeholder="Adınız veya Kod Adınız">
         <input type="text" id="reg-input" placeholder="300 00 000" oninput="maskele(this)">
         <button class="primary-btn" onclick="numarayiKaydet()">Hafızaya Kaydet</button>
     </div>
@@ -257,7 +263,7 @@
         <div class="my-status-container">
             <div class="status-dot"></div>
             <span id="my-num-status">Bağlanıyor...</span>
-            <span id="change-btn" class="change-btn" onclick="numaraSifirla()" style="display:none;">[Değiştir]</span>
+            <span id="change-btn" class="change-btn" onclick="numaraSifirla()" style="display:none;">[Sıfırla]</span>
         </div>
     </div>
 
@@ -267,7 +273,6 @@
             <div class="phone-display" id="phone-display"></div>
         </div>
 
-        <!-- image.png Yapısına Uygun Cam Butonlar -->
         <div class="keypad">
             <div class="key" onclick="tusBas('1')"><span class="key-num">1</span><span class="key-letters">&nbsp;</span></div>
             <div class="key" onclick="tusBas('2')"><span class="key-num">2</span><span class="key-letters">abc</span></div>
@@ -290,26 +295,24 @@
         </div>
     </div>
 
-    <!-- SEKME 2: REHBER (KİŞİLER) -->
+    <!-- SEKME 2: REHBER -->
     <div id="tab-contacts-content" class="tab-content">
         <div class="section-header">
             <h3>Kişiler</h3>
             <div class="add-contact-icon" onclick="yeniKisiEkle()">＋</div>
         </div>
-        <div class="contact-list" id="contact-list-container">
-            <!-- Dinamik Kişiler Buraya Gelecek -->
-        </div>
+        <div class="contact-list" id="contact-list-container"></div>
     </div>
 
-    <!-- SEKME 3: KENDİ KARTIM (PROFİL) -->
+    <!-- SEKME 3: PROFİLİM -->
     <div id="tab-mycard-content" class="tab-content">
         <div class="section-header">
             <h3>Kendi Kartım</h3>
         </div>
         <div class="profile-card">
             <div class="profile-avatar">👤</div>
-            <h4 class="profile-name" id="card-name">Cenk Alperen Al</h4>
-            <span class="profile-tag">Alperino</span>
+            <h4 class="profile-name" id="card-name">Yükleniyor...</h4>
+            <span class="profile-tag">Bulvar Üyesi</span>
             
             <div class="profile-details">
                 <div class="detail-row">
@@ -322,13 +325,13 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Durum</span>
-                    <span class="detail-value" style="color:var(--ios-green);">Aktif (Bulvar Sunucusu)</span>
+                    <span class="detail-value" style="color:var(--ios-green);">Aktif (Sunucu Bağlantısı)</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- TAM EKRAN TAMAMEN ÇALIŞAN ÇAĞRILI EKRAN PANELİ -->
+    <!-- ÇAĞRILI EKRAN PANELİ -->
     <div id="call-screen" class="call-overlay">
         <div class="call-info">
             <h1 id="call-screen-number">300 00 000</h1>
@@ -341,7 +344,7 @@
         </div>
     </div>
 
-    <!-- ALT DOLGU VE GEÇİŞ TABLARI -->
+    <!-- ALT GEÇİŞ TABLARI -->
     <div class="tab-bar">
         <div class="tab-item active" onclick="sekmeDegistir('keypad')">
             <span class="tab-icon">⌨️</span><span>Klavye</span>
@@ -354,7 +357,6 @@
         </div>
     </div>
 
-    <!-- Ses Çıkış Motoru -->
     <audio id="audio-player" autoplay></audio>
 </div>
 
@@ -363,21 +365,17 @@
     let currentCall = null;
     let localStream = null;
     let mySavedNumber = localStorage.getItem('bulvar_telsiz_no');
+    let mySavedName = localStorage.getItem('bulvar_telsiz_name');
     
-    // Varsayılan Rehber Verisi
-    let rehber = JSON.parse(localStorage.getItem('bulvar_rehber')) || [
-        { name: "Bulvar Sahası Santral", number: "30010000" }
-    ];
+    // YENİ: Başlangıçta rehber tamamen temiz (boş dizi) geliyor
+    let rehber = JSON.parse(localStorage.getItem('bulvar_rehber')) || [];
 
-    // Gelişmiş Asenkron Ses Yakalama Motoru (PC Hatalarını Çözen Bölüm)
     async function sesAyarla() {
         if (localStream) return localStream;
         try {
-            // PC'de mikrofon iznini zorla almayı dener
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         } catch (err) {
-            console.warn("Fiziksel mikrofon bulunamadı veya izin verilmedi. Yapay ses kanalı üretiliyor...", err);
-            // PC'de mikrofon yoksa uygulamanın çökmemesi ve arama yapabilmesi için sanal sessiz kanal üretimi:
+            console.warn("Sanal ses kanalı üretiliyor...", err);
             let ctx = new (window.AudioContext || window.webkitAudioContext)();
             let oscillator = ctx.createOscillator();
             let dst = ctx.createMediaStreamDestination();
@@ -387,42 +385,50 @@
         return localStream;
     }
 
-    // Bildirim Yetkisini Kontrol Et
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
     }
 
     window.onload = async function() {
         rehberListele();
-        await sesAyarla(); // Sayfa yüklendiğinde ses motorunu sessizce hazırla
-        if (!mySavedNumber) {
+        await sesAyarla();
+        if (!mySavedNumber || !mySavedName) {
             document.getElementById('register-screen').style.display = 'flex';
         } else {
-            sistemeBaglan(mySavedNumber);
+            sistemeBaglan(mySavedNumber, mySavedName);
         }
     }
 
     function numarayiKaydet() {
-        let num = document.getElementById('reg-input').value.replace(/\s/g, '');
-        if (num.length !== 8) return alert("Lütfen 8 haneli tam bir numara girin!");
-        localStorage.setItem('bulvar_telsiz_no', num);
+        let nameInput = document.getElementById('reg-name').value.trim();
+        let numInput = document.getElementById('reg-input').value.replace(/\s/g, '');
+        
+        if (!nameInput) return alert("Lütfen adınızı veya telsiz kodunuzu yazın!");
+        if (numInput.length !== 8) return alert("Lütfen 8 haneli tam bir numara girin!");
+        
+        localStorage.setItem('bulvar_telsiz_no', numInput);
+        localStorage.setItem('bulvar_telsiz_name', nameInput);
+        
         document.getElementById('register-screen').style.display = 'none';
-        sistemeBaglan(num);
+        sistemeBaglan(numInput, nameInput);
     }
 
     function numaraSifirla() {
         localStorage.removeItem('bulvar_telsiz_no');
+        localStorage.removeItem('bulvar_telsiz_name');
         location.reload();
     }
 
-    function sistemeBaglan(numara) {
+    function sistemeBaglan(numara, isim) {
         mySavedNumber = numara;
+        mySavedName = isim;
+        
         let formatli = formatla(numara);
         document.getElementById('my-num-status').innerText = "Numaranız: " + formatli;
         document.getElementById('card-freq').innerText = formatli;
+        document.getElementById('card-name').innerText = isim; // İsmi profile bastık
         document.getElementById('change-btn').style.display = 'inline';
 
-        // PC ve Hücresel Ağ Engellerini Aşan Küresel Altyapı Yapılandırması
         peer = new Peer(numara, {
             config: {
                 'iceServers': [
@@ -434,7 +440,6 @@
             }
         });
 
-        // Gelen Aramayı Karşılama
         peer.on('call', async (incomingCall) => {
             currentCall = incomingCall;
             let arayanName = kisiIsmiBul(incomingCall.peer);
@@ -454,15 +459,13 @@
         });
 
         peer.on('error', (err) => {
-            console.error("PeerJS Bağlantı Hatası:", err.type);
             if(err.type === 'unavailable-id') {
-                alert("HATA: Bu numara ağda zaten açık durumda!");
+                alert("HATA: Bu frekans şu an kullanımda veya meşgul!");
                 numaraSifirla();
             }
         });
     }
 
-    // APPLE TARZI DOKUNMATİK KLAVYE İŞLEMLERİ
     let diyalogNo = "";
     function tusBas(rakam) {
         if (diyalogNo.replace(/\s/g, '').length >= 8) return;
@@ -476,7 +479,6 @@
         document.getElementById('phone-display').innerText = formatla(ham);
     }
 
-    // PC KLAVYE ENTEGRASYONU (FİZİKSEL TUŞLAR)
     window.addEventListener('keydown', (e) => {
         if (document.getElementById('register-screen').style.display === 'flex') return;
         if (e.key >= '0' && e.key <= '9') { tusBas(e.key); }
@@ -484,7 +486,6 @@
         else if (e.key === 'Enter') { aramaTetikle(); }
     });
 
-    // ARAMAYI BAŞLATMA MOTORU (Asenkron Güvenli Arama)
     async function aramaTetikle() {
         let hedef = diyalogNo.replace(/\s/g, '');
         if (hedef.length !== 8) return alert("Lütfen 8 haneli geçerli bir hedef girin!");
@@ -497,9 +498,7 @@
         document.getElementById('call-screen-status').innerText = "Bağlanıyor...";
         document.getElementById('btn-accept').style.display = 'none';
 
-        // Ses donanımının tam tetiklendiğinden asenkron emin oluyoruz
         let stream = await sesAyarla();
-
         currentCall = peer.call(hedef, stream);
         
         if (!currentCall) {
@@ -514,13 +513,6 @@
         });
 
         currentCall.on('close', () => { aramaArayuzKapat(); });
-        
-        // Zaman aşımı koruması (PC için emniyet kilidi)
-        setTimeout(() => {
-            if (currentCall && document.getElementById('call-screen-status').innerText === "Bağlanıyor...") {
-                document.getElementById('call-screen-status').innerText = "Sinyal Gönderiliyor...";
-            }
-        }, 3000);
     }
 
     function aramayiKabulEt() {
@@ -545,20 +537,17 @@
         diyalogNo = "";
     }
 
-    // REHBER SİSTEMİ ALTYAPISI
     function rehberListele() {
         const container = document.getElementById('contact-list-container');
         container.innerHTML = "";
-        
-        // Alfabetik sırala
         rehber.sort((a,b) => a.name.localeCompare(b.name));
 
         if(rehber.length === 0) {
-            container.innerHTML = `<p style="color:#8e8e93; text-align:center; margin-top:20px;">Rehberiniz boş.</p>`;
+            container.innerHTML = `<p style="color:#8e8e93; text-align:center; margin-top:40px; font-size:14px;">Rehberiniz henüz boş.<br>Yukarıdaki (+) butonuna basarak ekleyin.</p>`;
             return;
         }
 
-        rehber.forEach((kisi, index) => {
+        rehber.forEach((kisi) => {
             let item = document.createElement('div');
             item.className = "contact-item";
             item.onclick = () => {
@@ -581,7 +570,7 @@
     function yeniKisiEkle() {
         let isim = prompt("Kişi Adı:");
         if (!isim) return;
-        let num = prompt("Telsiz Numarası (8 haneli, örn 30045678):").replace(/\s/g, '');
+        let num = prompt("Telsiz Numarası (8 haneli):").replace(/\s/g, '');
         if (num.length !== 8 || isNaN(num)) return alert("Geçersiz numara formatı!");
 
         rehber.push({ name: isim, number: num });
@@ -590,23 +579,18 @@
     }
 
     function kisiIsmiBul(numara) {
-        let bul değer = rehber.find(k => k.number === numara);
-        return bul değer ? bul değer.name : formatla(numara);
+        let bul = rehber.find(k => k.number === numara);
+        return bul ? bul.name : formatla(numara);
     }
 
-    // SEKME DEĞİŞTİRME MEKANİZMASI
     function sekmeDegistir(sekmeAdi) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(`tab-${sekmeAdi}-content`).classList.add('active');
-        
-        // Seçilen sekme butonunu renklendir
         let index = sekmeAdi === 'keypad' ? 0 : (sekmeAdi === 'contacts' ? 1 : 2);
         document.querySelectorAll('.tab-bar .tab-item')[index].classList.add('active');
     }
 
-    // FORMATLAMA MASKE YARDIMCILARI
     function maskele(input) {
         let temiz = input.value.replace(/\D/g, '');
         if (temiz.length > 0 && temiz[0] !== '3') temiz = '3' + temiz;
