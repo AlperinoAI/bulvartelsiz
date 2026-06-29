@@ -200,7 +200,11 @@
     let localStream = null;
     let mySavedNumber = localStorage.getItem('bulvar_telsiz_no');
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { localStream = stream; });
+    // Mikrofon Al ve Hata Kontrolü Yap
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => { localStream = stream; })
+        .catch(err => { console.log("Mikrofon hatası: ", err); });
+
     if (Notification.permission !== "granted") Notification.requestPermission();
 
     window.onload = function() {
@@ -211,6 +215,20 @@
         }
     }
 
+    // YENİ: PC FİZİKSEL KLAVYE DESTEĞİ
+    window.addEventListener('keydown', (e) => {
+        // Eğer ilk kayıt ekranı açıksa bu dinleyiciyi çalıştırma (normal yazabilsin)
+        if (document.getElementById('register-screen').style.display === 'flex') return;
+
+        if (e.key >= '0' && e.key <= '9') {
+            tusBas(e.key);
+        } else if (e.key === 'Backspace') {
+            tusSil();
+        } else if (e.key === 'Enter') {
+            aramaTetikle();
+        }
+    });
+
     function numarayiKaydet() {
         let num = document.getElementById('reg-input').value.replace(/\s/g, '');
         if (num.length !== 8) return alert("Lütfen 8 haneli tam bir numara girin!");
@@ -220,19 +238,17 @@
         sistemeBaglan(num);
     }
 
-    // HAFIZADAKİ NUMARAYI SIFIRLAMA FONKSİYONU
     function numaraSifirla() {
-        localStorage.removeItem('bulvar_telsiz_no'); // Hafızayı siler
-        location.reload(); // Sayfayı baştan yükler (Böylece ilk ekran açılır)
+        localStorage.removeItem('bulvar_telsiz_no');
+        location.reload();
     }
 
     function sistemeBaglan(numara) {
         mySavedNumber = numara;
         let formatli = formatla(numara);
         document.getElementById('my-num-status').innerText = "Numaranız: " + formatli;
-        document.getElementById('change-btn').style.display = 'inline'; // Değiştir butonunu aç
+        document.getElementById('change-btn').style.display = 'inline';
 
-        // Farklı ağlarda kusursuz çalışması için Google sunucularını ekledik
         peer = new Peer(numara, {
             config: {
                 'iceServers': [
@@ -261,7 +277,6 @@
         });
     }
 
-    // APPLE KLAVYE AKSİYONLARI
     let diyalogNo = "";
     function tusBas(rakam) {
         if (diyalogNo.replace(/\s/g, '').length >= 8) return;
@@ -278,6 +293,10 @@
     function aramaTetikle() {
         let hedef = diyalogNo.replace(/\s/g, '');
         if (hedef.length !== 8) return alert("Geçerli bir numara yazın!");
+
+        if (!localStream) {
+            return alert("PC'de mikrofon izni verilmemiş veya bağlı mikrofon yok! Arama başlatılamaz.");
+        }
 
         document.getElementById('call-screen').style.display = 'flex';
         document.getElementById('call-screen-number').innerText = formatla(hedef);
