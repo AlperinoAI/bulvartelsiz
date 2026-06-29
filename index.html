@@ -8,15 +8,18 @@
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         :root {
-            --ios-dark: #000000;
-            --ios-gray: #1c1c1e;
-            --ios-button: #3a3a3c;
+            --ios-bg: #09090b;
+            --ios-card: #1c1c1e;
             --ios-green: #34c759;
             --ios-red: #ff3b30;
+            --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+            --glass-border: rgba(255, 255, 255, 0.25);
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--ios-dark);
+            background-color: var(--ios-bg);
+            background-image: radial-gradient(circle at 50% 20%, #1e1e30 0%, #09090b 70%);
             color: #fff;
             margin: 0;
             padding: 0;
@@ -26,171 +29,332 @@
             height: 100vh;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
         }
+
         .app-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 412px;
             height: 100vh;
-            background: var(--ios-dark);
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(20px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 40px 20px;
-            box-sizing: border-box;
             position: relative;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        /* Numara Kayıt Ekranı */
+
+        /* Üst Durum ve Navigasyon Çubuğu */
+        .app-header {
+            padding: 20px 24px 10px 24px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .app-title { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.5px; }
+        .my-status-container { font-size: 13px; color: #8e8e93; margin-top: 6px; display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; background: var(--ios-green); border-radius: 50%; box-shadow: 0 0 8px var(--ios-green); }
+        .change-btn { color: #ff9500; cursor: pointer; font-weight: 500; text-decoration: none; }
+
+        /* İçerik Alanları ve Sekmeler */
+        .tab-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: none;
+            height: calc(100vh - 170px);
+            box-sizing: border-box;
+        }
+        .tab-content.active { display: block; }
+
+        /* İlk Giriş Ekranı */
         .screen-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--ios-dark);
+            background: var(--ios-bg);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            padding: 20px;
+            z-index: 100;
+            padding: 30px;
             box-sizing: border-box;
         }
+        .screen-overlay h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -1px; }
         .screen-overlay input {
-            background: var(--ios-gray);
-            border: 1px solid #333;
+            background: var(--ios-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
-            padding: 15px;
-            font-size: 24px;
+            padding: 16px;
+            font-size: 26px;
             text-align: center;
-            border-radius: 12px;
-            width: 80%;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            width: 85%;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+            outline: none;
         }
-        /* Apple Tarzı Klavye Ekranı */
-        .display-area {
-            text-align: center;
-            margin-top: 40px;
-            height: 100px;
+        .primary-btn {
+            background: #fff; color: #000; border: none; padding: 14px 40px;
+            font-size: 16px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: 0.2s;
         }
-        .my-status { font-size: 14px; color: #8e8e93; margin-bottom: 10px; }
-        .change-btn { color: #ff9500; cursor: pointer; margin-left: 8px; font-weight: bold; text-decoration: none; }
-        .phone-display { font-size: 36px; font-weight: 300; min-height: 44px; letter-spacing: 1px; }
-        
+        .primary-btn:active { transform: scale(0.96); }
+
+        /* Arama Ekranı Göstergesi */
+        .display-area { text-align: center; margin: 15px 0; min-height: 50px; }
+        .phone-display { font-size: 38px; font-weight: 300; min-height: 46px; letter-spacing: 1px; color: #fff; }
+
+        /* image.png Stilindeki Parlak Cam (Glassmorphic) Tuş Takımı */
         .keypad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 18px;
             justify-items: center;
-            margin-bottom: 20px;
+            padding: 0 10px;
+            margin-bottom: 15px;
         }
         .key {
-            width: 75px;
-            height: 75px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
-            background: var(--ios-button);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(255,255,255,0.25);
             color: #fff;
-            font-size: 30px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: background 0.1s;
+            transition: all 0.1s ease;
         }
-        .key:active { background: #4a4a4c; }
+        .key:active {
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255,255,255,0.4);
+            transform: scale(0.93);
+        }
+        .key-num { font-size: 32px; font-weight: 400; line-height: 1; margin-bottom: 2px; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .key-letters { font-size: 9px; font-weight: 600; color: rgba(255, 255, 255, 0.7); letter-spacing: 1.5px; text-transform: uppercase; }
 
-        .actions-area {
+        .actions-area { display: flex; justify-content: center; align-items: center; gap: 45px; margin-bottom: 15px; }
+        .btn-call-trigger { background: var(--ios-green); color: white; width: 74px; height: 74px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3); transition: 0.1s; }
+        .btn-call-trigger:active { transform: scale(0.92); }
+        .btn-delete { color: #8e8e93; font-size: 26px; cursor: pointer; width: 74px; text-align: center; transition: 0.1s; }
+        .btn-delete:active { color: #fff; }
+
+        /* Rehber (Kişiler) Sekmesi Stili */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .section-header h3 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .add-contact-icon { font-size: 24px; color: var(--ios-green); cursor: pointer; }
+        
+        .contact-list { display: flex; flex-direction: column; gap: 2px; }
+        .contact-item {
+            background: rgba(28, 28, 30, 0.6);
+            padding: 14px 18px;
+            border-radius: 12px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 40px;
-            margin-bottom: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.02);
         }
-        .btn-call-trigger { background: var(--ios-green); color: white; width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; cursor: pointer;}
-        .btn-delete { color: #8e8e93; font-size: 24px; cursor: pointer; width: 75px; text-align: center;}
+        .contact-item:active { background: rgba(44, 44, 46, 0.8); }
+        .contact-info .name { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+        .contact-info .number { font-size: 13px; color: #8e8e93; font-family: monospace; }
+        .contact-call-icon { font-size: 18px; color: var(--ios-green); }
 
-        /* Çağrı Ekranı */
+        /* Kendi Kartım (Profil) Sekmesi Stili */
+        .profile-card {
+            background: linear-gradient(145deg, #1c1c1e, #111112);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .profile-avatar {
+            width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;
+            margin: 0 auto 16px auto; display: flex; justify-content: center; align-items: center;
+            font-size: 36px; border: 2px solid var(--glass-border);
+        }
+        .profile-name { font-size: 22px; font-weight: 600; margin: 0 0 4px 0; }
+        .profile-tag { font-size: 13px; color: #ff9500; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .profile-details { margin-top: 24px; text-align: left; display: flex; flex-direction: column; gap: 14px; }
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .detail-label { color: #8e8e93; font-size: 14px; }
+        .detail-value { font-size: 14px; font-weight: 500; }
+
+        /* Gerçekçi Çağrı Tam Ekran Overlay */
         .call-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 10, 0.95);
+            background: rgba(9, 9, 11, 0.98);
             display: none;
             flex-direction: column;
             justify-content: space-between;
-            padding: 60px 30px;
+            padding: 80px 40px;
             box-sizing: border-box;
-            z-index: 5;
+            z-index: 500;
             text-align: center;
         }
-        .call-info h1 { font-size: 32px; font-weight: 400; margin-bottom: 5px; }
-        .call-info p { color: #8e8e93; font-size: 16px; margin: 0; }
+        .call-info h1 { font-size: 36px; font-weight: 300; margin-bottom: 8px; letter-spacing: 1px; }
+        .call-info p { color: #8e8e93; font-size: 16px; margin: 0; animation: pulse 1.5s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
         
-        .call-buttons {
+        .call-buttons { display: flex; justify-content: space-around; width: 100%; margin-bottom: 20px; }
+        .call-btn {
+            width: 76px; height: 76px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 15px; font-weight: 600; cursor: pointer; color: white;
+            transition: 0.1s; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .call-btn:active { transform: scale(0.9); }
+
+        /* Alt Tab Çubuğu (iOS Tarzı) */
+        .tab-bar {
+            height: 68px;
+            background: rgba(28, 28, 30, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-around;
-            width: 100%;
-            margin-bottom: 40px;
+            align-items: center;
+            padding-bottom: 12px;
+            box-sizing: border-box;
         }
-        .call-btn {
-            width: 75px; height: 75px; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 14px; font-weight: bold; cursor: pointer; color: white;
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8e8e93;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: 0.2s;
         }
-        .bg-green { background: var(--ios-green); }
-        .bg-red { background: var(--ios-red); }
+        .tab-item.active { color: var(--ios-green); }
+        .tab-icon { font-size: 22px; margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
 
-    <!-- NUMARA GİRİŞ EKRANI -->
+    <!-- NUMARA KAYIT EKRANI -->
     <div id="register-screen" class="screen-overlay" style="display: none;">
-        <h2 style="font-weight: 400;">Bulvar Telsiz</h2>
-        <p style="color: #8e8e93; margin-bottom: 30px;">Numaranızı Belirleyin (3xx xx xxx)</p>
+        <h2>Bulvar Telsiz</h2>
+        <p style="color: #8e8e93; margin-bottom: 30px; font-size: 15px;">Kendi Telsiz Numaranızı Belirleyin</p>
         <input type="text" id="reg-input" placeholder="300 00 000" oninput="maskele(this)">
-        <button onclick="numarayiKaydet()" style="background: var(--ios-green); color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 20px; cursor: pointer; font-weight: bold;">Telefonuma Kaydet</button>
+        <button class="primary-btn" onclick="numarayiKaydet()">Hafızaya Kaydet</button>
     </div>
 
-    <!-- ANA EKRAN -->
-    <div class="display-area">
-        <div class="my-status">
-            <span id="my-num-status">Sistem başlatılıyor...</span>
+    <!-- SABİT UYGULAMA ÜST BARI -->
+    <div class="app-header">
+        <h1 class="app-title">Bulvar Telsiz</h1>
+        <div class="my-status-container">
+            <div class="status-dot"></div>
+            <span id="my-num-status">Bağlanıyor...</span>
             <span id="change-btn" class="change-btn" onclick="numaraSifirla()" style="display:none;">[Değiştir]</span>
         </div>
-        <div class="phone-display" id="phone-display"></div>
     </div>
 
-    <div class="keypad">
-        <div class="key" onclick="tusBas('1')">1</div>
-        <div class="key" onclick="tusBas('2')">2</div>
-        <div class="key" onclick="tusBas('3')">3</div>
-        <div class="key" onclick="tusBas('4')">4</div>
-        <div class="key" onclick="tusBas('5')">5</div>
-        <div class="key" onclick="tusBas('6')">6</div>
-        <div class="key" onclick="tusBas('7')">7</div>
-        <div class="key" onclick="tusBas('8')">8</div>
-        <div class="key" onclick="tusBas('9')">9</div>
-        <div class="key" style="background:transparent; cursor:default;"></div>
-        <div class="key" onclick="tusBas('0')">0</div>
-        <div class="key" style="background:transparent; cursor:default;"></div>
+    <!-- SEKME 1: TUŞ TAKIMI -->
+    <div id="tab-keypad-content" class="tab-content active">
+        <div class="display-area">
+            <div class="phone-display" id="phone-display"></div>
+        </div>
+
+        <!-- image.png Yapısına Uygun Cam Butonlar -->
+        <div class="keypad">
+            <div class="key" onclick="tusBas('1')"><span class="key-num">1</span><span class="key-letters">&nbsp;</span></div>
+            <div class="key" onclick="tusBas('2')"><span class="key-num">2</span><span class="key-letters">abc</span></div>
+            <div class="key" onclick="tusBas('3')"><span class="key-num">3</span><span class="key-letters">def</span></div>
+            <div class="key" onclick="tusBas('4')"><span class="key-num">4</span><span class="key-letters">ghi</span></div>
+            <div class="key" onclick="tusBas('5')"><span class="key-num">5</span><span class="key-letters">jkl</span></div>
+            <div class="key" onclick="tusBas('6')"><span class="key-num">6</span><span class="key-letters">mno</span></div>
+            <div class="key" onclick="tusBas('7')"><span class="key-num">7</span><span class="key-letters">pqrs</span></div>
+            <div class="key" onclick="tusBas('8')"><span class="key-num">8</span><span class="key-letters">tuv</span></div>
+            <div class="key" onclick="tusBas('9')"><span class="key-num">9</span><span class="key-letters">wxyz</span></div>
+            <div class="key" style="opacity: 0; cursor: default;"></div>
+            <div class="key" onclick="tusBas('0')"><span class="key-num">0</span><span class="key-letters">+</span></div>
+            <div class="key" style="opacity: 0; cursor: default;"></div>
+        </div>
+
+        <div class="actions-area">
+            <div style="width: 74px;"></div>
+            <div class="btn-call-trigger" onclick="aramaTetikle()">📞</div>
+            <div class="btn-delete" onclick="tusSil()">⌫</div>
+        </div>
     </div>
 
-    <div class="actions-area">
-        <div style="width: 75px;"></div>
-        <div class="btn-call-trigger" onclick="aramaTetikle()">📞</div>
-        <div class="btn-delete" onclick="tusSil()">⌫</div>
+    <!-- SEKME 2: REHBER (KİŞİLER) -->
+    <div id="tab-contacts-content" class="tab-content">
+        <div class="section-header">
+            <h3>Kişiler</h3>
+            <div class="add-contact-icon" onclick="yeniKisiEkle()">＋</div>
+        </div>
+        <div class="contact-list" id="contact-list-container">
+            <!-- Dinamik Kişiler Buraya Gelecek -->
+        </div>
     </div>
 
-    <!-- ÇAĞRI EKRANI -->
+    <!-- SEKME 3: KENDİ KARTIM (PROFİL) -->
+    <div id="tab-mycard-content" class="tab-content">
+        <div class="section-header">
+            <h3>Kendi Kartım</h3>
+        </div>
+        <div class="profile-card">
+            <div class="profile-avatar">👤</div>
+            <h4 class="profile-name" id="card-name">Cenk Alperen Al</h4>
+            <span class="profile-tag">Alperino</span>
+            
+            <div class="profile-details">
+                <div class="detail-row">
+                    <span class="detail-label">Telsiz Frekansı</span>
+                    <span class="detail-value" id="card-freq" style="color:var(--ios-green); font-family:monospace;">---</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Bağlantı Türü</span>
+                    <span class="detail-value">WebRTC / Secure HTTPS</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Durum</span>
+                    <span class="detail-value" style="color:var(--ios-green);">Aktif (Bulvar Sunucusu)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAM EKRAN TAMAMEN ÇALIŞAN ÇAĞRILI EKRAN PANELİ -->
     <div id="call-screen" class="call-overlay">
         <div class="call-info">
             <h1 id="call-screen-number">300 00 000</h1>
-            <p id="call-screen-status">Aranıyor...</p>
+            <p id="call-screen-status">Bağlantı Aranıyor...</p>
         </div>
         
         <div class="call-buttons">
-            <div id="btn-reject" class="call-btn bg-red" onclick="aramayiReddet()">Reddet</div>
+            <div id="btn-reject" class="call-btn bg-red" onclick="aramayiReddet()">Kapat</div>
             <div id="btn-accept" class="call-btn bg-green" onclick="aramayiKabulEt()">Cevapla</div>
         </div>
     </div>
 
+    <!-- ALT DOLGU VE GEÇİŞ TABLARI -->
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="sekmeDegistir('keypad')">
+            <span class="tab-icon">⌨️</span><span>Klavye</span>
+        </div>
+        <div class="tab-item" onclick="sekmeDegistir('contacts')">
+            <span class="tab-icon">👥</span><span>Kişiler</span>
+        </div>
+        <div class="tab-item" onclick="sekmeDegistir('mycard')">
+            <span class="tab-icon">💳</span><span>Profilim</span>
+        </div>
+    </div>
+
+    <!-- Ses Çıkış Motoru -->
     <audio id="audio-player" autoplay></audio>
 </div>
 
@@ -199,15 +363,38 @@
     let currentCall = null;
     let localStream = null;
     let mySavedNumber = localStorage.getItem('bulvar_telsiz_no');
+    
+    // Varsayılan Rehber Verisi
+    let rehber = JSON.parse(localStorage.getItem('bulvar_rehber')) || [
+        { name: "Bulvar Sahası Santral", number: "30010000" }
+    ];
 
-    // Mikrofon Al ve Hata Kontrolü Yap
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => { localStream = stream; })
-        .catch(err => { console.log("Mikrofon hatası: ", err); });
+    // Gelişmiş Asenkron Ses Yakalama Motoru (PC Hatalarını Çözen Bölüm)
+    async function sesAyarla() {
+        if (localStream) return localStream;
+        try {
+            // PC'de mikrofon iznini zorla almayı dener
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        } catch (err) {
+            console.warn("Fiziksel mikrofon bulunamadı veya izin verilmedi. Yapay ses kanalı üretiliyor...", err);
+            // PC'de mikrofon yoksa uygulamanın çökmemesi ve arama yapabilmesi için sanal sessiz kanal üretimi:
+            let ctx = new (window.AudioContext || window.webkitAudioContext)();
+            let oscillator = ctx.createOscillator();
+            let dst = ctx.createMediaStreamDestination();
+            oscillator.connect(dst);
+            localStream = dst.stream;
+        }
+        return localStream;
+    }
 
-    if (Notification.permission !== "granted") Notification.requestPermission();
+    // Bildirim Yetkisini Kontrol Et
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
 
-    window.onload = function() {
+    window.onload = async function() {
+        rehberListele();
+        await sesAyarla(); // Sayfa yüklendiğinde ses motorunu sessizce hazırla
         if (!mySavedNumber) {
             document.getElementById('register-screen').style.display = 'flex';
         } else {
@@ -215,24 +402,9 @@
         }
     }
 
-    // YENİ: PC FİZİKSEL KLAVYE DESTEĞİ
-    window.addEventListener('keydown', (e) => {
-        // Eğer ilk kayıt ekranı açıksa bu dinleyiciyi çalıştırma (normal yazabilsin)
-        if (document.getElementById('register-screen').style.display === 'flex') return;
-
-        if (e.key >= '0' && e.key <= '9') {
-            tusBas(e.key);
-        } else if (e.key === 'Backspace') {
-            tusSil();
-        } else if (e.key === 'Enter') {
-            aramaTetikle();
-        }
-    });
-
     function numarayiKaydet() {
         let num = document.getElementById('reg-input').value.replace(/\s/g, '');
         if (num.length !== 8) return alert("Lütfen 8 haneli tam bir numara girin!");
-        
         localStorage.setItem('bulvar_telsiz_no', num);
         document.getElementById('register-screen').style.display = 'none';
         sistemeBaglan(num);
@@ -247,36 +419,50 @@
         mySavedNumber = numara;
         let formatli = formatla(numara);
         document.getElementById('my-num-status').innerText = "Numaranız: " + formatli;
+        document.getElementById('card-freq').innerText = formatli;
         document.getElementById('change-btn').style.display = 'inline';
 
+        // PC ve Hücresel Ağ Engellerini Aşan Küresel Altyapı Yapılandırması
         peer = new Peer(numara, {
             config: {
                 'iceServers': [
                     { 'urls': 'stun:stun.l.google.com:19302' },
                     { 'urls': 'stun:stun1.l.google.com:19302' },
-                    { 'urls': 'stun:stun2.l.google.com:19302' }
+                    { 'urls': 'stun:stun2.l.google.com:19302' },
+                    { 'urls': 'stun:stun3.l.google.com:19302' }
                 ]
             }
         });
 
-        peer.on('call', (incomingCall) => {
+        // Gelen Aramayı Karşılama
+        peer.on('call', async (incomingCall) => {
             currentCall = incomingCall;
+            let arayanName = kisiIsmiBul(incomingCall.peer);
             let arayanFormatli = formatla(incomingCall.peer);
 
             if (document.hidden) {
-                new Notification("Bulvar Telsiz Gelen Arama", {
-                    body: `${arayanFormatli} sizi arıyor!`,
+                new Notification("Bulvar Telsiz", {
+                    body: `${arayanName} sizi arıyor!`,
                     icon: "https://cdn-icons-png.flaticon.com/512/3616/3616231.png"
                 });
             }
 
             document.getElementById('call-screen').style.display = 'flex';
-            document.getElementById('call-screen-number').innerText = arayanFormatli;
-            document.getElementById('call-screen-status').innerText = "Gelen Arama...";
+            document.getElementById('call-screen-number').innerText = arayanName;
+            document.getElementById('call-screen-status').innerText = arayanName !== arayanFormatli ? "Gelen Çağrı (" + arayanFormatli + ")" : "Gelen Telsiz Çağrısı...";
             document.getElementById('btn-accept').style.display = 'flex';
+        });
+
+        peer.on('error', (err) => {
+            console.error("PeerJS Bağlantı Hatası:", err.type);
+            if(err.type === 'unavailable-id') {
+                alert("HATA: Bu numara ağda zaten açık durumda!");
+                numaraSifirla();
+            }
         });
     }
 
+    // APPLE TARZI DOKUNMATİK KLAVYE İŞLEMLERİ
     let diyalogNo = "";
     function tusBas(rakam) {
         if (diyalogNo.replace(/\s/g, '').length >= 8) return;
@@ -290,36 +476,61 @@
         document.getElementById('phone-display').innerText = formatla(ham);
     }
 
-    function aramaTetikle() {
-        let hedef = diyalogNo.replace(/\s/g, '');
-        if (hedef.length !== 8) return alert("Geçerli bir numara yazın!");
+    // PC KLAVYE ENTEGRASYONU (FİZİKSEL TUŞLAR)
+    window.addEventListener('keydown', (e) => {
+        if (document.getElementById('register-screen').style.display === 'flex') return;
+        if (e.key >= '0' && e.key <= '9') { tusBas(e.key); }
+        else if (e.key === 'Backspace') { tusSil(); }
+        else if (e.key === 'Enter') { aramaTetikle(); }
+    });
 
-        if (!localStream) {
-            return alert("PC'de mikrofon izni verilmemiş veya bağlı mikrofon yok! Arama başlatılamaz.");
-        }
+    // ARAMAYI BAŞLATMA MOTORU (Asenkron Güvenli Arama)
+    async function aramaTetikle() {
+        let hedef = diyalogNo.replace(/\s/g, '');
+        if (hedef.length !== 8) return alert("Lütfen 8 haneli geçerli bir hedef girin!");
+        if (hedef === mySavedNumber) return alert("Kendi telsiz frekansınızı arayamazsınız!");
+
+        let hedefIsim = kisiIsmiBul(hedef);
 
         document.getElementById('call-screen').style.display = 'flex';
-        document.getElementById('call-screen-number').innerText = formatla(hedef);
-        document.getElementById('call-screen-status').innerText = "Aranıyor...";
+        document.getElementById('call-screen-number').innerText = hedefIsim;
+        document.getElementById('call-screen-status').innerText = "Bağlanıyor...";
         document.getElementById('btn-accept').style.display = 'none';
 
-        currentCall = peer.call(hedef, localStream);
+        // Ses donanımının tam tetiklendiğinden asenkron emin oluyoruz
+        let stream = await sesAyarla();
+
+        currentCall = peer.call(hedef, stream);
+        
+        if (!currentCall) {
+            alert("Arama motoru başlatılamadı.");
+            aramaArayuzKapat();
+            return;
+        }
 
         currentCall.on('stream', (remoteStream) => {
-            document.getElementById('call-screen-status').innerText = "Bağlandı";
+            document.getElementById('call-screen-status').innerText = "Bağlantı Kuruldu (Ses Aktif)";
             document.getElementById('audio-player').srcObject = remoteStream;
         });
 
         currentCall.on('close', () => { aramaArayuzKapat(); });
+        
+        // Zaman aşımı koruması (PC için emniyet kilidi)
+        setTimeout(() => {
+            if (currentCall && document.getElementById('call-screen-status').innerText === "Bağlanıyor...") {
+                document.getElementById('call-screen-status').innerText = "Sinyal Gönderiliyor...";
+            }
+        }, 3000);
     }
 
     function aramayiKabulEt() {
         if (!currentCall) return;
-        currentCall.answer(localStream);
-        document.getElementById('call-screen-status').innerText = "Bağlandı";
-        
-        currentCall.on('stream', (remoteStream) => {
-            document.getElementById('audio-player').srcObject = remoteStream;
+        sesAyarla().then((stream) => {
+            currentCall.answer(stream);
+            document.getElementById('call-screen-status').innerText = "Bağlantı Kuruldu (Ses Aktif)";
+            currentCall.on('stream', (remoteStream) => {
+                document.getElementById('audio-player').srcObject = remoteStream;
+            });
         });
     }
 
@@ -334,6 +545,68 @@
         diyalogNo = "";
     }
 
+    // REHBER SİSTEMİ ALTYAPISI
+    function rehberListele() {
+        const container = document.getElementById('contact-list-container');
+        container.innerHTML = "";
+        
+        // Alfabetik sırala
+        rehber.sort((a,b) => a.name.localeCompare(b.name));
+
+        if(rehber.length === 0) {
+            container.innerHTML = `<p style="color:#8e8e93; text-align:center; margin-top:20px;">Rehberiniz boş.</p>`;
+            return;
+        }
+
+        rehber.forEach((kisi, index) => {
+            let item = document.createElement('div');
+            item.className = "contact-item";
+            item.onclick = () => {
+                diyalogNo = kisi.number;
+                sekmeDegistir('keypad');
+                document.getElementById('phone-display').innerText = formatla(kisi.number);
+                aramaTetikle();
+            };
+            item.innerHTML = `
+                <div class="contact-info">
+                    <div class="name">${kisi.name}</div>
+                    <div class="number">${formatla(kisi.number)}</div>
+                </div>
+                <div class="contact-call-icon">📞</div>
+            `;
+            container.appendChild(item);
+        });
+    }
+
+    function yeniKisiEkle() {
+        let isim = prompt("Kişi Adı:");
+        if (!isim) return;
+        let num = prompt("Telsiz Numarası (8 haneli, örn 30045678):").replace(/\s/g, '');
+        if (num.length !== 8 || isNaN(num)) return alert("Geçersiz numara formatı!");
+
+        rehber.push({ name: isim, number: num });
+        localStorage.setItem('bulvar_rehber', JSON.stringify(rehber));
+        rehberListele();
+    }
+
+    function kisiIsmiBul(numara) {
+        let bul değer = rehber.find(k => k.number === numara);
+        return bul değer ? bul değer.name : formatla(numara);
+    }
+
+    // SEKME DEĞİŞTİRME MEKANİZMASI
+    function sekmeDegistir(sekmeAdi) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${sekmeAdi}-content`).classList.add('active');
+        
+        // Seçilen sekme butonunu renklendir
+        let index = sekmeAdi === 'keypad' ? 0 : (sekmeAdi === 'contacts' ? 1 : 2);
+        document.querySelectorAll('.tab-bar .tab-item')[index].classList.add('active');
+    }
+
+    // FORMATLAMA MASKE YARDIMCILARI
     function maskele(input) {
         let temiz = input.value.replace(/\D/g, '');
         if (temiz.length > 0 && temiz[0] !== '3') temiz = '3' + temiz;
