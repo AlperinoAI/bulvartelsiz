@@ -70,6 +70,7 @@
             height: 100px;
         }
         .my-status { font-size: 14px; color: #8e8e93; margin-bottom: 10px; }
+        .change-btn { color: #ff9500; cursor: pointer; margin-left: 8px; font-weight: bold; text-decoration: none; }
         .phone-display { font-size: 36px; font-weight: 300; min-height: 44px; letter-spacing: 1px; }
         
         .keypad {
@@ -93,7 +94,6 @@
             transition: background 0.1s;
         }
         .key:active { background: #4a4a4c; }
-        .key-action { font-size: 16px; font-weight: bold; }
 
         .actions-area {
             display: flex;
@@ -105,7 +105,7 @@
         .btn-call-trigger { background: var(--ios-green); color: white; width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; cursor: pointer;}
         .btn-delete { color: #8e8e93; font-size: 24px; cursor: pointer; width: 75px; text-align: center;}
 
-        /* Çağrı Ekranı (Gelen/Giden Arama) */
+        /* Çağrı Ekranı */
         .call-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -131,7 +131,6 @@
             width: 75px; height: 75px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             font-size: 14px; font-weight: bold; cursor: pointer; color: white;
-            flex-direction: column;
         }
         .bg-green { background: var(--ios-green); }
         .bg-red { background: var(--ios-red); }
@@ -141,7 +140,7 @@
 
 <div class="app-container">
 
-    <!-- EK-1: İLK GİRİŞTE NUMARA SORMA EKRANI -->
+    <!-- NUMARA GİRİŞ EKRANI -->
     <div id="register-screen" class="screen-overlay" style="display: none;">
         <h2 style="font-weight: 400;">Bulvar Telsiz</h2>
         <p style="color: #8e8e93; margin-bottom: 30px;">Numaranızı Belirleyin (3xx xx xxx)</p>
@@ -149,9 +148,12 @@
         <button onclick="numarayiKaydet()" style="background: var(--ios-green); color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 20px; cursor: pointer; font-weight: bold;">Telefonuma Kaydet</button>
     </div>
 
-    <!-- ANA EKRAN: APPLE KLAVYE -->
+    <!-- ANA EKRAN -->
     <div class="display-area">
-        <div class="my-status" id="my-num-status">Sistem başlatılıyor...</div>
+        <div class="my-status">
+            <span id="my-num-status">Sistem başlatılıyor...</span>
+            <span id="change-btn" class="change-btn" onclick="numaraSifirla()" style="display:none;">[Değiştir]</span>
+        </div>
         <div class="phone-display" id="phone-display"></div>
     </div>
 
@@ -171,16 +173,16 @@
     </div>
 
     <div class="actions-area">
-        <div style="width: 75px;"></div> <!-- Dengeleme için boşluk -->
+        <div style="width: 75px;"></div>
         <div class="btn-call-trigger" onclick="aramaTetikle()">📞</div>
         <div class="btn-delete" onclick="tusSil()">⌫</div>
     </div>
 
-    <!-- EK-2: GERÇEKÇİ KABUL/REDDET ÇAĞRI EKRANI -->
+    <!-- ÇAĞRI EKRANI -->
     <div id="call-screen" class="call-overlay">
         <div class="call-info">
             <h1 id="call-screen-number">300 00 000</h1>
-            <p id="call-screen-status">Bulvar Telsiz Aranıyor...</p>
+            <p id="call-screen-status">Aranıyor...</p>
         </div>
         
         <div class="call-buttons">
@@ -198,7 +200,6 @@
     let localStream = null;
     let mySavedNumber = localStorage.getItem('bulvar_telsiz_no');
 
-    // Mikrofon ve Bildirim İzinleri
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { localStream = stream; });
     if (Notification.permission !== "granted") Notification.requestPermission();
 
@@ -219,19 +220,33 @@
         sistemeBaglan(num);
     }
 
+    // HAFIZADAKİ NUMARAYI SIFIRLAMA FONKSİYONU
+    function numaraSifirla() {
+        localStorage.removeItem('bulvar_telsiz_no'); // Hafızayı siler
+        location.reload(); // Sayfayı baştan yükler (Böylece ilk ekran açılır)
+    }
+
     function sistemeBaglan(numara) {
         mySavedNumber = numara;
         let formatli = formatla(numara);
-        document.getElementById('my-num-status').innerText = "Numaranız: " + formatli + " (Çevrimiçi)";
+        document.getElementById('my-num-status').innerText = "Numaranız: " + formatli;
+        document.getElementById('change-btn').style.display = 'inline'; // Değiştir butonunu aç
 
-        peer = new Peer(numara);
+        // Farklı ağlarda kusursuz çalışması için Google sunucularını ekledik
+        peer = new Peer(numara, {
+            config: {
+                'iceServers': [
+                    { 'urls': 'stun:stun.l.google.com:19302' },
+                    { 'urls': 'stun:stun1.l.google.com:19302' },
+                    { 'urls': 'stun:stun2.l.google.com:19302' }
+                ]
+            }
+        });
 
-        // GELEN ARAMA YAKALAYICI (UYGULAMA AÇIKKEN VEYA ARKA PLANDAYKEN)
         peer.on('call', (incomingCall) => {
             currentCall = incomingCall;
             let arayanFormatli = formatla(incomingCall.peer);
 
-            // Eğer uygulama arka plandaysa yukarıdan bildirim gönder
             if (document.hidden) {
                 new Notification("Bulvar Telsiz Gelen Arama", {
                     body: `${arayanFormatli} sizi arıyor!`,
@@ -239,15 +254,14 @@
                 });
             }
 
-            // Arama Ekranını Aç
             document.getElementById('call-screen').style.display = 'flex';
             document.getElementById('call-screen-number').innerText = arayanFormatli;
-            document.getElementById('call-screen-status').innerText = "Bulvar Telsiz Gelen Arama...";
+            document.getElementById('call-screen-status').innerText = "Gelen Arama...";
             document.getElementById('btn-accept').style.display = 'flex';
         });
     }
 
-    // APPLE KLAVYE FONKSİYONLARI
+    // APPLE KLAVYE AKSİYONLARI
     let diyalogNo = "";
     function tusBas(rakam) {
         if (diyalogNo.replace(/\s/g, '').length >= 8) return;
@@ -261,7 +275,6 @@
         document.getElementById('phone-display').innerText = formatla(ham);
     }
 
-    // ARAMA YAPMA (Arayan Taraf)
     function aramaTetikle() {
         let hedef = diyalogNo.replace(/\s/g, '');
         if (hedef.length !== 8) return alert("Geçerli bir numara yazın!");
@@ -269,23 +282,22 @@
         document.getElementById('call-screen').style.display = 'flex';
         document.getElementById('call-screen-number').innerText = formatla(hedef);
         document.getElementById('call-screen-status').innerText = "Aranıyor...";
-        document.getElementById('btn-accept').style.display = 'none'; // Arayan kişide cevapla butonu olmaz
+        document.getElementById('btn-accept').style.display = 'none';
 
         currentCall = peer.call(hedef, localStream);
 
         currentCall.on('stream', (remoteStream) => {
-            document.getElementById('call-screen-status').innerText = "Bağlandı (Konuşuluyor)";
+            document.getElementById('call-screen-status').innerText = "Bağlandı";
             document.getElementById('audio-player').srcObject = remoteStream;
         });
 
         currentCall.on('close', () => { aramaArayuzKapat(); });
     }
 
-    // KABUL / REDDET BUTON AKSİYONLARI
     function aramayiKabulEt() {
         if (!currentCall) return;
         currentCall.answer(localStream);
-        document.getElementById('call-screen-status').innerText = "Bağlandı (Konuşuluyor)";
+        document.getElementById('call-screen-status').innerText = "Bağlandı";
         
         currentCall.on('stream', (remoteStream) => {
             document.getElementById('audio-player').srcObject = remoteStream;
@@ -303,7 +315,6 @@
         diyalogNo = "";
     }
 
-    // NUMARA FORMATLAMA YARDIMCILARI
     function maskele(input) {
         let temiz = input.value.replace(/\D/g, '');
         if (temiz.length > 0 && temiz[0] !== '3') temiz = '3' + temiz;
