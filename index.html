@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bulvar Telsiz</title>
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --ios-dark: #000000;
+            --ios-gray: #1c1c1e;
+            --ios-button: #3a3a3c;
+            --ios-green: #34c759;
+            --ios-red: #ff3b30;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-dark);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: var(--ios-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* Numara Kayıt Ekranı */
+        .screen-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--ios-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .screen-overlay input {
+            background: var(--ios-gray);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 12px;
+            width: 80%;
+            margin-bottom: 20px;
+        }
+        /* Apple Tarzı Klavye Ekranı */
+        .display-area {
+            text-align: center;
+            margin-top: 40px;
+            height: 100px;
+        }
+        .my-status { font-size: 14px; color: #8e8e93; margin-bottom: 10px; }
+        .phone-display { font-size: 36px; font-weight: 300; min-height: 44px; letter-spacing: 1px; }
+        
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            justify-items: center;
+            margin-bottom: 20px;
+        }
+        .key {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background: var(--ios-button);
+            color: #fff;
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .key:active { background: #4a4a4c; }
+        .key-action { font-size: 16px; font-weight: bold; }
+
+        .actions-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        .btn-call-trigger { background: var(--ios-green); color: white; width: 75px; height: 75px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; cursor: pointer;}
+        .btn-delete { color: #8e8e93; font-size: 24px; cursor: pointer; width: 75px; text-align: center;}
+
+        /* Çağrı Ekranı (Gelen/Giden Arama) */
+        .call-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px 30px;
+            box-sizing: border-box;
+            z-index: 5;
+            text-align: center;
+        }
+        .call-info h1 { font-size: 32px; font-weight: 400; margin-bottom: 5px; }
+        .call-info p { color: #8e8e93; font-size: 16px; margin: 0; }
+        
+        .call-buttons {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        .call-btn {
+            width: 75px; height: 75px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 14px; font-weight: bold; cursor: pointer; color: white;
+            flex-direction: column;
+        }
+        .bg-green { background: var(--ios-green); }
+        .bg-red { background: var(--ios-red); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- EK-1: İLK GİRİŞTE NUMARA SORMA EKRANI -->
+    <div id="register-screen" class="screen-overlay" style="display: none;">
+        <h2 style="font-weight: 400;">Bulvar Telsiz</h2>
+        <p style="color: #8e8e93; margin-bottom: 30px;">Numaranızı Belirleyin (3xx xx xxx)</p>
+        <input type="text" id="reg-input" placeholder="300 00 000" oninput="maskele(this)">
+        <button onclick="numarayiKaydet()" style="background: var(--ios-green); color: white; border: none; padding: 12px 30px; font-size: 16px; border-radius: 20px; cursor: pointer; font-weight: bold;">Telefonuma Kaydet</button>
+    </div>
+
+    <!-- ANA EKRAN: APPLE KLAVYE -->
+    <div class="display-area">
+        <div class="my-status" id="my-num-status">Sistem başlatılıyor...</div>
+        <div class="phone-display" id="phone-display"></div>
+    </div>
+
+    <div class="keypad">
+        <div class="key" onclick="tusBas('1')">1</div>
+        <div class="key" onclick="tusBas('2')">2</div>
+        <div class="key" onclick="tusBas('3')">3</div>
+        <div class="key" onclick="tusBas('4')">4</div>
+        <div class="key" onclick="tusBas('5')">5</div>
+        <div class="key" onclick="tusBas('6')">6</div>
+        <div class="key" onclick="tusBas('7')">7</div>
+        <div class="key" onclick="tusBas('8')">8</div>
+        <div class="key" onclick="tusBas('9')">9</div>
+        <div class="key" style="background:transparent; cursor:default;"></div>
+        <div class="key" onclick="tusBas('0')">0</div>
+        <div class="key" style="background:transparent; cursor:default;"></div>
+    </div>
+
+    <div class="actions-area">
+        <div style="width: 75px;"></div> <!-- Dengeleme için boşluk -->
+        <div class="btn-call-trigger" onclick="aramaTetikle()">📞</div>
+        <div class="btn-delete" onclick="tusSil()">⌫</div>
+    </div>
+
+    <!-- EK-2: GERÇEKÇİ KABUL/REDDET ÇAĞRI EKRANI -->
+    <div id="call-screen" class="call-overlay">
+        <div class="call-info">
+            <h1 id="call-screen-number">300 00 000</h1>
+            <p id="call-screen-status">Bulvar Telsiz Aranıyor...</p>
+        </div>
+        
+        <div class="call-buttons">
+            <div id="btn-reject" class="call-btn bg-red" onclick="aramayiReddet()">Reddet</div>
+            <div id="btn-accept" class="call-btn bg-green" onclick="aramayiKabulEt()">Cevapla</div>
+        </div>
+    </div>
+
+    <audio id="audio-player" autoplay></audio>
+</div>
+
+<script>
+    let peer = null;
+    let currentCall = null;
+    let localStream = null;
+    let mySavedNumber = localStorage.getItem('bulvar_telsiz_no');
+
+    // Mikrofon ve Bildirim İzinleri
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { localStream = stream; });
+    if (Notification.permission !== "granted") Notification.requestPermission();
+
+    window.onload = function() {
+        if (!mySavedNumber) {
+            document.getElementById('register-screen').style.display = 'flex';
+        } else {
+            sistemeBaglan(mySavedNumber);
+        }
+    }
+
+    function numarayiKaydet() {
+        let num = document.getElementById('reg-input').value.replace(/\s/g, '');
+        if (num.length !== 8) return alert("Lütfen 8 haneli tam bir numara girin!");
+        
+        localStorage.setItem('bulvar_telsiz_no', num);
+        document.getElementById('register-screen').style.display = 'none';
+        sistemeBaglan(num);
+    }
+
+    function sistemeBaglan(numara) {
+        mySavedNumber = numara;
+        let formatli = formatla(numara);
+        document.getElementById('my-num-status').innerText = "Numaranız: " + formatli + " (Çevrimiçi)";
+
+        peer = new Peer(numara);
+
+        // GELEN ARAMA YAKALAYICI (UYGULAMA AÇIKKEN VEYA ARKA PLANDAYKEN)
+        peer.on('call', (incomingCall) => {
+            currentCall = incomingCall;
+            let arayanFormatli = formatla(incomingCall.peer);
+
+            // Eğer uygulama arka plandaysa yukarıdan bildirim gönder
+            if (document.hidden) {
+                new Notification("Bulvar Telsiz Gelen Arama", {
+                    body: `${arayanFormatli} sizi arıyor!`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/3616/3616231.png"
+                });
+            }
+
+            // Arama Ekranını Aç
+            document.getElementById('call-screen').style.display = 'flex';
+            document.getElementById('call-screen-number').innerText = arayanFormatli;
+            document.getElementById('call-screen-status').innerText = "Bulvar Telsiz Gelen Arama...";
+            document.getElementById('btn-accept').style.display = 'flex';
+        });
+    }
+
+    // APPLE KLAVYE FONKSİYONLARI
+    let diyalogNo = "";
+    function tusBas(rakam) {
+        if (diyalogNo.replace(/\s/g, '').length >= 8) return;
+        diyalogNo += rakam;
+        document.getElementById('phone-display').innerText = formatla(diyalogNo.replace(/\s/g, ''));
+    }
+    function tusSil() {
+        let ham = diyalogNo.replace(/\s/g, '');
+        ham = ham.substring(0, ham.length - 1);
+        diyalogNo = ham;
+        document.getElementById('phone-display').innerText = formatla(ham);
+    }
+
+    // ARAMA YAPMA (Arayan Taraf)
+    function aramaTetikle() {
+        let hedef = diyalogNo.replace(/\s/g, '');
+        if (hedef.length !== 8) return alert("Geçerli bir numara yazın!");
+
+        document.getElementById('call-screen').style.display = 'flex';
+        document.getElementById('call-screen-number').innerText = formatla(hedef);
+        document.getElementById('call-screen-status').innerText = "Aranıyor...";
+        document.getElementById('btn-accept').style.display = 'none'; // Arayan kişide cevapla butonu olmaz
+
+        currentCall = peer.call(hedef, localStream);
+
+        currentCall.on('stream', (remoteStream) => {
+            document.getElementById('call-screen-status').innerText = "Bağlandı (Konuşuluyor)";
+            document.getElementById('audio-player').srcObject = remoteStream;
+        });
+
+        currentCall.on('close', () => { aramaArayuzKapat(); });
+    }
+
+    // KABUL / REDDET BUTON AKSİYONLARI
+    function aramayiKabulEt() {
+        if (!currentCall) return;
+        currentCall.answer(localStream);
+        document.getElementById('call-screen-status').innerText = "Bağlandı (Konuşuluyor)";
+        
+        currentCall.on('stream', (remoteStream) => {
+            document.getElementById('audio-player').srcObject = remoteStream;
+        });
+    }
+
+    function aramayiReddet() {
+        if (currentCall) currentCall.close();
+        aramaArayuzKapat();
+    }
+
+    function aramaArayuzKapat() {
+        document.getElementById('call-screen').style.display = 'none';
+        document.getElementById('phone-display').innerText = "";
+        diyalogNo = "";
+    }
+
+    // NUMARA FORMATLAMA YARDIMCILARI
+    function maskele(input) {
+        let temiz = input.value.replace(/\D/g, '');
+        if (temiz.length > 0 && temiz[0] !== '3') temiz = '3' + temiz;
+        else if (temiz.length === 0) temiz = '3';
+        input.value = formatla(temiz.substring(0, 8));
+    }
+
+    function formatla(temizNumara) {
+        let f = '';
+        if (temizNumara.length > 0) f += temizNumara.substring(0, 3);
+        if (temizNumara.length > 3) f += ' ' + temizNumara.substring(3, 5);
+        if (temizNumara.length > 5) f += ' ' + temizNumara.substring(5, 8);
+        return f;
+    }
+</script>
+</body>
+</html>
